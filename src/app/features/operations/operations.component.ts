@@ -134,10 +134,15 @@ const STATUS_OPTIONS: BookingStatus[] = [
           <div class="tracking-grid">
             @for (driver of driverService.activeDrivers(); track driver.id) {
               <div class="tracking-card" [class.online]="driver.online">
-                <div class="tracking-avatar">{{ driver.photoInitials }}</div>
+                <div class="tracking-avatar-wrap">
+                  <div class="tracking-avatar">{{ driver.photoInitials }}</div>
+                  @if (driver.online) {
+                    <span class="online-dot"></span>
+                  }
+                </div>
                 <div class="tracking-info">
                   <strong>{{ driver.name }}</strong>
-                  <span class="text-muted">{{ driver.phone }}</span>
+                  <span class="phone">{{ driver.phone }}</span>
                 </div>
                 <div class="tracking-right">
                   <app-status-badge [status]="driver.online ? 'Online' : 'Offline'"></app-status-badge>
@@ -583,11 +588,13 @@ const STATUS_OPTIONS: BookingStatus[] = [
       /* ── Tab Bar ── */
       .tab-bar {
         display: flex;
-        gap: 0;
-        padding: 0 4px;
+        gap: 4px;
+        padding: 6px;
         margin-top: 16px;
         border-radius: var(--radius-lg);
-        overflow: hidden;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
       }
       .tab-btn {
         flex: 1;
@@ -595,24 +602,24 @@ const STATUS_OPTIONS: BookingStatus[] = [
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 12px 20px;
+        padding: 10px 20px;
         border: none;
         background: transparent;
         font-size: 13.5px;
         font-weight: 600;
         color: var(--color-text-muted);
         cursor: pointer;
-        border-bottom: 3px solid transparent;
-        transition: color 0.12s, border-color 0.12s, background 0.12s;
-        border-radius: 0;
+        border-radius: var(--radius-md);
+        transition: color 0.15s, background 0.15s, box-shadow 0.15s;
       }
       .tab-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
       .tab-btn:hover { background: var(--color-bg); color: var(--color-text); }
       .tab-btn.active {
-        color: var(--color-primary);
-        border-bottom-color: var(--color-primary);
-        background: var(--color-primary-light);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px var(--color-primary-glow);
       }
+      .tab-btn.active mat-icon { color: rgba(255,255,255,0.9); }
 
       /* ── Section header shared ── */
       .section-header {
@@ -629,7 +636,7 @@ const STATUS_OPTIONS: BookingStatus[] = [
       /* ── Tracking cards ── */
       .tracking-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 12px;
         padding: 16px;
       }
@@ -637,21 +644,47 @@ const STATUS_OPTIONS: BookingStatus[] = [
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 14px;
+        padding: 14px 16px;
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
-        background: var(--color-bg);
-        transition: border-color 0.12s;
+        border-radius: var(--radius-lg);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-xs);
+        transition: box-shadow 0.15s, border-color 0.15s;
+        position: relative;
+        overflow: hidden;
       }
-      .tracking-card.online { border-color: #b7e4cf; background: #f2fbf6; }
+      .tracking-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        background: var(--color-border-strong);
+        border-radius: 3px 0 0 3px;
+      }
+      .tracking-card.online { border-color: #a7dfc5; }
+      .tracking-card.online::before { background: var(--color-success); }
+      .tracking-card:hover { box-shadow: var(--shadow-md); }
       .tracking-avatar {
-        width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-        background: var(--color-primary-light); color: var(--color-primary-dark);
+        width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--color-primary-light) 0%, #d0dcfd 100%);
+        color: var(--color-primary-dark);
         display: flex; align-items: center; justify-content: center;
         font-size: 12px; font-weight: 700;
+        border: 1.5px solid rgba(59,110,240,0.2);
+        position: relative;
+      }
+      .tracking-avatar-wrap { position: relative; flex-shrink: 0; }
+      .online-dot {
+        position: absolute;
+        bottom: 1px; right: 1px;
+        width: 9px; height: 9px;
+        border-radius: 50%;
+        background: var(--color-success);
+        border: 2px solid var(--color-surface);
       }
       .tracking-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-      .tracking-info strong { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tracking-info strong { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tracking-info .phone { font-size: 11.5px; color: var(--color-text-muted); }
       .tracking-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 
       /* ── Performance KPIs ── */
@@ -665,20 +698,23 @@ const STATUS_OPTIONS: BookingStatus[] = [
         background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
-        padding: 16px;
+        padding: 18px 16px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         box-shadow: var(--shadow-sm);
+        transition: box-shadow 0.15s, transform 0.15s;
+        cursor: default;
       }
+      .kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
       .kpi-icon {
-        width: 40px; height: 40px; border-radius: var(--radius-md);
+        width: 44px; height: 44px; border-radius: 12px;
         display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       }
-      .kpi-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
+      .kpi-icon mat-icon { font-size: 22px; width: 22px; height: 22px; }
       .kpi-body { display: flex; flex-direction: column; gap: 2px; }
-      .kpi-value { font-size: 22px; font-weight: 700; line-height: 1; }
-      .kpi-label { font-size: 11.5px; color: var(--color-text-muted); }
+      .kpi-value { font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+      .kpi-label { font-size: 11px; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 
       .perf-grid {
         display: grid;
