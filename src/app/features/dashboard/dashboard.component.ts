@@ -18,12 +18,12 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
     <app-page-header title="Dashboard" subtitle="Live overview of today's campus shuttle operations"></app-page-header>
 
     <div class="stat-grid">
-      <app-stat-card label="Today's Trips"      [value]="todaysTrips()"      icon="route"         hint="Bookings scheduled today"></app-stat-card>
-      <app-stat-card label="Completed"          [value]="completedTrips()"   icon="task_alt"      accent="#0f7b4f" hint="Successfully dropped"></app-stat-card>
-      <app-stat-card label="Active Trips"       [value]="activeTrips()"      icon="directions_bus" accent="#9a5200" hint="On going / accepted"></app-stat-card>
-      <app-stat-card label="Available Drivers"  [value]="availableDrivers()" icon="badge"         accent="#0f7b4f" hint="Online and on duty"></app-stat-card>
-      <app-stat-card label="Total Bookings"     [value]="totalBookings()"    icon="event_seat"    hint="All statuses, today"></app-stat-card>
-      <app-stat-card label="No Shows"           [value]="noShows()"          icon="report"        accent="#be2c22" hint="Riders who did not board"></app-stat-card>
+      <app-stat-card label="Today's Trips"      [value]="todaysTrips()"      icon="route"          colorTheme="blue"    hint="Bookings scheduled today"></app-stat-card>
+      <app-stat-card label="Completed"          [value]="completedTrips()"   icon="task_alt"       colorTheme="emerald" hint="Successfully dropped"></app-stat-card>
+      <app-stat-card label="Active Trips"       [value]="activeTrips()"      icon="directions_bus"  colorTheme="amber"   hint="On going / accepted"></app-stat-card>
+      <app-stat-card label="Available Drivers"  [value]="availableDrivers()" icon="badge"           colorTheme="violet"  hint="Online and on duty"></app-stat-card>
+      <app-stat-card label="Total Bookings"     [value]="totalBookings()"    icon="event_seat"      colorTheme="teal"    hint="All statuses, today"></app-stat-card>
+      <app-stat-card label="No Shows"           [value]="noShows()"          icon="report"          colorTheme="rose"    hint="Riders who did not board"></app-stat-card>
     </div>
 
     <div class="grid-2">
