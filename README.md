@@ -10,6 +10,16 @@
 
 # 🚌 Smart Campus Shuttle Management
 
+### 🎬 Live Demo Video
+
+<a href="https://drive.google.com/file/d/1ObdnKFGrVZGWAx-2hRJvI_ZIVFmu2os-/view?usp=sharing" target="_blank">
+  <img src="https://img.shields.io/badge/▶%20Watch%20Demo-Click%20to%20Play-FF0000?style=for-the-badge&logo=google-drive&logoColor=white" alt="Watch Demo Video" />
+</a>
+
+<br/>
+
+> Click the button above to watch the full walkthrough video of the app on Google Drive.
+
 ### A modern, frontend-only enterprise dashboard for university campus shuttle operations
 
 *Driver timelines · Employee journeys · Fleet management · Live analytics*
