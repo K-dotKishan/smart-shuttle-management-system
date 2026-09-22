@@ -40,12 +40,46 @@ import { isoToDisplay } from '../../../core/services/time.util';
           <span class="section-label">VEHICLE</span>
           @if (vehicle(); as v) {
             <div class="vehicle-card">
-              <div class="vehicle-icon-wrap">
-                <mat-icon>directions_bus</mat-icon>
+              <div class="vehicle-bus-img">
+                <!-- Inline bus SVG matching the reference screenshot -->
+                <svg viewBox="0 0 80 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bus illustration">
+                  <!-- Body -->
+                  <rect x="4" y="10" width="72" height="26" rx="5" fill="#d1d9e8"/>
+                  <!-- Roof -->
+                  <rect x="8" y="6" width="64" height="8" rx="3" fill="#b0bbcf"/>
+                  <!-- Windows row -->
+                  <rect x="12" y="13" width="10" height="8" rx="2" fill="#e8f0fe"/>
+                  <rect x="26" y="13" width="10" height="8" rx="2" fill="#e8f0fe"/>
+                  <rect x="40" y="13" width="10" height="8" rx="2" fill="#e8f0fe"/>
+                  <rect x="54" y="13" width="10" height="8" rx="2" fill="#e8f0fe"/>
+                  <!-- Front windshield -->
+                  <rect x="66" y="12" width="7" height="10" rx="2" fill="#c4d4f0"/>
+                  <!-- Door -->
+                  <rect x="12" y="24" width="8" height="10" rx="1" fill="#b0bbcf"/>
+                  <!-- Undercarriage / bumper -->
+                  <rect x="4" y="33" width="72" height="4" rx="2" fill="#8a96aa"/>
+                  <!-- Wheels -->
+                  <circle cx="18" cy="38" r="5" fill="#444c5e"/>
+                  <circle cx="18" cy="38" r="2.5" fill="#8a96aa"/>
+                  <circle cx="62" cy="38" r="5" fill="#444c5e"/>
+                  <circle cx="62" cy="38" r="2.5" fill="#8a96aa"/>
+                  <!-- Headlight -->
+                  <rect x="70" y="23" width="4" height="3" rx="1" fill="#fef08a"/>
+                  <!-- Stripe -->
+                  <rect x="4" y="22" width="72" height="2" fill="#3b6ef0" opacity="0.35"/>
+                </svg>
               </div>
               <div class="vehicle-details">
                 <strong class="vehicle-number">{{ v.vehicleNumber }}</strong>
-                <span class="text-muted vehicle-sub">{{ v.registrationNumber }} &middot; {{ v.vehicleType }} &middot; {{ v.capacity }} seats</span>
+                <div class="vehicle-meta-row">
+                  <span class="vehicle-meta-item">{{ v.registrationNumber }}</span>
+                  <span class="vehicle-sep">|</span>
+                  <span class="vehicle-meta-item">{{ v.vehicleType }}</span>
+                  <span class="vehicle-sep">|</span>
+                  <span class="vehicle-meta-item capacity-item">
+                    <mat-icon class="cap-icon">group</mat-icon>{{ v.capacity }}
+                  </span>
+                </div>
               </div>
             </div>
           } @else {
@@ -226,25 +260,36 @@ import { isoToDisplay } from '../../../core/services/time.util';
     .vehicle-card {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       background: var(--color-bg);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
-      padding: 10px 14px;
+      padding: 12px 14px;
     }
-    .vehicle-icon-wrap {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-sm);
-      background: var(--color-primary-light);
+    .vehicle-bus-img {
+      width: 72px;
+      height: 40px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
     }
-    .vehicle-icon-wrap mat-icon { color: var(--color-primary); font-size: 20px; width: 20px; height: 20px; }
+    .vehicle-bus-img svg {
+      width: 72px;
+      height: 40px;
+    }
+    .vehicle-details { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .vehicle-number { font-size: 14px; font-weight: 700; display: block; }
-    .vehicle-sub { font-size: 12px; display: block; margin-top: 1px; }
+    .vehicle-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .vehicle-meta-item { font-size: 12px; color: var(--color-text-muted); }
+    .vehicle-sep { font-size: 12px; color: var(--color-border-strong); }
+    .capacity-item { display: inline-flex; align-items: center; gap: 3px; }
+    .cap-icon { font-size: 13px; width: 13px; height: 13px; color: var(--color-text-muted); }
     .no-data { font-size: 13px; margin: 0; }
 
     /* ── Journey ── */
