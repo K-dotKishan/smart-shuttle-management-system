@@ -12,7 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
   { label: 'Operations', icon: 'manage_accounts', path: '/operations' },
   { label: 'Drivers', icon: 'badge', path: '/drivers' },
-  { label: 'Bookings', icon: 'event_seat', path: '/bookings' },
+  { label: 'Journeys', icon: 'directions', path: '/bookings' },
   { label: 'Routes', icon: 'alt_route', path: '/routes' },
   { label: 'Vehicles', icon: 'directions_bus', path: '/vehicles' },
   { label: 'Trip History', icon: 'history', path: '/trips' },

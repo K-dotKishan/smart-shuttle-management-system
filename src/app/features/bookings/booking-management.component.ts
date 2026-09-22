@@ -35,7 +35,7 @@ const STATUS_OPTIONS: BookingStatus[] = [
     BookingDetailsDrawerComponent,
   ],
   template: `
-    <app-page-header title="Booking Management" subtitle="Search, filter and manage every shuttle booking">
+    <app-page-header title="Journeys" subtitle="View and manage every employee shuttle journey">
       <div actions>
         <button class="btn btn-primary" type="button" (click)="openCreate()">
           <mat-icon>add</mat-icon>

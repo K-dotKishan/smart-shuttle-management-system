@@ -35,7 +35,7 @@ export const routes: Routes = [
           import('./features/bookings/booking-management.component').then(
             (m) => m.BookingManagementComponent
           ),
-        title: 'Bookings · Campus Shuttle',
+        title: 'Journeys · Campus Shuttle',
       },
       {
         path: 'routes',

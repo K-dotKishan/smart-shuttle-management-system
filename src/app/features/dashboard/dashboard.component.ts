@@ -76,7 +76,7 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
     <section class="card" style="margin-top: 16px;">
       <div class="section-hd card-pad" style="margin-bottom:0; padding-bottom: 0;">
         <h3>Recent Bookings</h3>
-        <a class="view-link" routerLink="/bookings">View all →</a>
+        <a class="view-link" routerLink="/bookings">View all journeys →</a>
       </div>
       <div class="scroll-x">
         <table class="data-table">
