@@ -173,6 +173,38 @@ Everything else (filtering, pagination, aggregates) intentionally uses Signals r
 
 ---
 
+## 📡 API Documentation (Swagger / OpenAPI)
+
+A full **OpenAPI 3.0** specification is included at [`public/openapi.yaml`](public/openapi.yaml), and a styled **Swagger UI** page is available at:
+
+```
+http://localhost:4200/api-docs.html
+```
+
+> Also accessible via the **API Docs** link at the bottom of the sidebar inside the app.
+
+### Endpoints covered
+
+| Resource | Endpoints |
+|---|---|
+| 🔐 **Auth** | `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` |
+| 🎫 **Bookings** | Full CRUD + `/sign-in` · `/no-show` actions |
+| 🧑‍✈️ **Drivers** | Full CRUD + `/start-duty` · `/end-duty` · `/deactivate` |
+| 📅 **Schedule** | Timeline events per driver — CRUD + duty/break helpers |
+| 🚐 **Vehicles** | Full CRUD with availability filtering |
+| 🛣️ **Routes** | Full CRUD with active/inactive toggle |
+| 📜 **Trips** | Paginated history with multi-filter |
+| 📊 **Dashboard** | Live stats + hourly demand data |
+
+The Swagger UI features:
+- 🎨 **Custom dark banner** matching the app's theme
+- 🟢 **Color-coded method pills** (GET=blue, POST=green, PUT=amber, PATCH=violet, DELETE=rose)
+- 🔐 **JWT bearer auth** with `Authorize` button
+- 📝 **Full request/response schemas** with examples
+- 🔍 **Filter bar** to search endpoints
+
+---
+
 ## 🚀 Getting Started
 
 ```bash

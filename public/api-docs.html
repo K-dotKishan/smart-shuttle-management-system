@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Docs — Smart Campus Shuttle</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css" />
+  <style>
+    /* ── Custom Swagger UI theme matching the app ── */
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #2d46c7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #eef1f8;
+    }
+
+    /* Top banner */
+    .api-banner {
+      background: linear-gradient(135deg, #0a1628 0%, #13264e 100%);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .api-banner-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4361ee, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(67,97,238,0.5);
+      flex-shrink: 0;
+    }
+    .api-banner-info { flex: 1; }
+    .api-banner-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.025em;
+      margin: 0 0 4px;
+    }
+    .api-banner-sub {
+      font-size: 13px;
+      color: rgba(148,163,184,0.8);
+      margin: 0;
+    }
+    .api-banner-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(67,97,238,0.25);
+      border: 1px solid rgba(67,97,238,0.4);
+      color: #a5b4fc;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+    }
+    .api-banner-badge::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    /* Swagger wrapper */
+    #swagger-ui {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    /* Override Swagger UI colors */
+    .swagger-ui .topbar { display: none !important; }
+
+    .swagger-ui .info .title {
+      font-size: 26px !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+    }
+    .swagger-ui .info .description {
+      font-size: 14px !important;
+      color: #475569 !important;
+    }
+
+    .swagger-ui .opblock-tag {
+      font-size: 15px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      border-bottom: 2px solid #e0e5ef !important;
+      padding-bottom: 8px !important;
+    }
+    .swagger-ui .opblock-tag:hover { background: #f0f4ff !important; }
+
+    /* Method pills */
+    .swagger-ui .opblock .opblock-summary-method {
+      border-radius: 6px !important;
+      font-weight: 700 !important;
+      font-size: 11px !important;
+      letter-spacing: 0.06em !important;
+      min-width: 64px !important;
+      text-align: center !important;
+    }
+
+    .swagger-ui .opblock.opblock-get    { border-color: #93c5fd !important; background: #eff6ff !important; }
+    .swagger-ui .opblock.opblock-post   { border-color: #6ee7b7 !important; background: #f0fdf4 !important; }
+    .swagger-ui .opblock.opblock-put    { border-color: #fcd34d !important; background: #fffbeb !important; }
+    .swagger-ui .opblock.opblock-patch  { border-color: #c4b5fd !important; background: #faf5ff !important; }
+    .swagger-ui .opblock.opblock-delete { border-color: #fca5a5 !important; background: #fff1f2 !important; }
+
+    .swagger-ui .opblock.opblock-get    .opblock-summary-method { background: #2563eb !important; }
+    .swagger-ui .opblock.opblock-post   .opblock-summary-method { background: #059669 !important; }
+    .swagger-ui .opblock.opblock-put    .opblock-summary-method { background: #d97706 !important; }
+    .swagger-ui .opblock.opblock-patch  .opblock-summary-method { background: #7c3aed !important; }
+    .swagger-ui .opblock.opblock-delete .opblock-summary-method { background: #e11d48 !important; }
+
+    .swagger-ui .btn.execute {
+      background: linear-gradient(135deg, #4361ee, #2d46c7) !important;
+      border-color: transparent !important;
+      color: #fff !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      box-shadow: 0 2px 8px rgba(67,97,238,0.3) !important;
+    }
+    .swagger-ui .btn.execute:hover {
+      background: linear-gradient(135deg, #5472f2, #4361ee) !important;
+    }
+
+    .swagger-ui .btn.authorize {
+      color: #4361ee !important;
+      border-color: #4361ee !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+    }
+
+    .swagger-ui .model-box { border-radius: 8px !important; }
+    .swagger-ui table thead tr td, .swagger-ui table thead tr th {
+      font-size: 11px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.06em !important;
+      color: #64748b !important;
+    }
+
+    .swagger-ui .scheme-container {
+      background: #fff !important;
+      border: 1px solid #e0e5ef !important;
+      border-radius: 12px !important;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.06) !important;
+      padding: 16px 24px !important;
+    }
+
+    .swagger-ui section.models { border-radius: 12px !important; }
+    .swagger-ui section.models h4 { font-weight: 700 !important; }
+
+    .swagger-ui .info { margin: 24px 0 32px !important; }
+    .swagger-ui .info a { color: #4361ee !important; }
+
+    /* Back to app link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(148,163,184,0.9);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+    .back-link:hover { color: #fff; }
+    .back-link svg { width: 16px; height: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- Banner -->
+  <div class="api-banner">
+    <div class="api-banner-logo">SC</div>
+    <div class="api-banner-info">
+      <h1 class="api-banner-title">Smart Campus Shuttle — API Documentation</h1>
+      <p class="api-banner-sub">OpenAPI 3.0 · REST · JWT Auth · All endpoints documented</p>
+    </div>
+    <span class="api-banner-badge">OAS 3.0</span>
+    <a href="/" class="back-link" style="margin-left:16px;">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+      Back to App
+    </a>
+  </div>
+
+  <!-- Swagger UI -->
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = () => {
+      SwaggerUIBundle({
+        url: '/openapi.yaml',
+        dom_id: '#swagger-ui',
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset,
+        ],
+        layout: 'StandaloneLayout',
+        deepLinking: true,
+        displayRequestDuration: true,
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 2,
+        docExpansion: 'list',
+        filter: true,
+        showExtensions: true,
+        tryItOutEnabled: false,
+        syntaxHighlight: {
+          activated: true,
+          theme: 'agate',
+        },
+      });
+    };
+  </script>
+</body>
+</html>

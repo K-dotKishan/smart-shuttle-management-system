@@ -49,12 +49,27 @@ const NAV_ITEMS: NavItem[] = [
             </a>
           </li>
         }
+        <li>
+          <div class="nav-divider"></div>
+          <a
+            href="/api-docs.html"
+            target="_blank"
+            rel="noopener"
+            [attr.aria-label]="'API Documentation'"
+            class="api-docs-link"
+          >
+            <mat-icon>api</mat-icon>
+            @if (!collapsed()) {
+              <span>API Docs</span>
+              <mat-icon class="ext-icon">open_in_new</mat-icon>
+            }
+          </a>
+        </li>
       </ul>
 
       <button class="collapse-toggle" type="button" (click)="toggleCollapse.emit()" aria-label="Toggle sidebar">
         <mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
-      </button>
-    </nav>
+      </button>    </nav>
   `,
   styles: [
     `
@@ -158,6 +173,13 @@ const NAV_ITEMS: NavItem[] = [
         background: rgba(255,255,255,0.05);
         margin: 8px 10px;
       }
+
+      .api-docs-link {
+        color: rgba(167,139,250,0.8) !important;
+      }
+      .api-docs-link:hover { color: #c4b5fd !important; }
+      .api-docs-link mat-icon:first-child { color: #a78bfa; }
+      .ext-icon { font-size: 13px !important; width: 13px !important; height: 13px !important; margin-left: auto; opacity: 0.6; }
 
       .collapse-toggle {
         border: none;

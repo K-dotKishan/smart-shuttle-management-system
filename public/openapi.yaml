@@ -1,0 +1,1372 @@
+openapi: 3.0.3
+info:
+  title: Smart Campus Shuttle Management API
+  description: |
+    REST API specification for the **Smart Campus Shuttle Management System** — 
+    a university campus transit platform covering shuttle bookings, driver scheduling, 
+    vehicle fleet management, route definitions, and trip history.
+
+    > ⚠️ **Note:** This is a frontend-only application. This OpenAPI spec documents the 
+    > *intended* backend API contract. No server is currently running — all data is 
+    > managed via Angular Signals and persisted to `localStorage`.
+
+    ## Authentication
+    All endpoints (except public health check) require a Bearer JWT token obtained 
+    from the `/auth/login` endpoint.
+
+    ## Roles
+    - **admin** — full access to all resources
+    - **dispatcher** — manage bookings, view drivers/vehicles/routes
+    - **driver** — view own schedule and assigned bookings
+    - **employee** — create and view own bookings
+
+  version: 1.0.0
+  contact:
+    name: Campus Shuttle API Support
+    email: api@campus-shuttle.edu
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.campus-shuttle.edu/v1
+    description: Production
+  - url: https://staging-api.campus-shuttle.edu/v1
+    description: Staging
+  - url: http://localhost:3000/v1
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Authentication and session management
+  - name: Bookings
+    description: Employee journey bookings — create, view, edit, cancel
+  - name: Drivers
+    description: Driver roster and duty management
+  - name: Schedule
+    description: Driver timeline events (duty, break, pickup, drop, etc.)
+  - name: Vehicles
+    description: Fleet management
+  - name: Routes
+    description: Campus shuttle route definitions
+  - name: Trips
+    description: Historical trip log
+  - name: Dashboard
+    description: Aggregated analytics and live stats
+
+paths:
+
+  # ─────────────────────────────────────────────
+  # AUTH
+  # ─────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and obtain JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@campus.edu
+                password:
+                  type: string
+                  format: password
+                  example: "secret123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expiresIn:
+                    type: integer
+                    example: 86400
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Invalidate current session token
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Logged out successfully
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  # ─────────────────────────────────────────────
+  # BOOKINGS (Employee Journeys)
+  # ─────────────────────────────────────────────
+  /bookings:
+    get:
+      tags: [Bookings]
+      summary: List all bookings with filters and pagination
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Search by booking ID or employee name
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStatus'
+        - name: date
+          in: query
+          description: Filter by date (ISO format yyyy-MM-dd)
+          schema:
+            type: string
+            format: date
+        - name: driverId
+          in: query
+          schema:
+            type: string
+        - name: routeId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list of bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingListResponse'
+
+    post:
+      tags: [Bookings]
+      summary: Create a new booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreate'
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /bookings/{id}:
+    get:
+      tags: [Bookings]
+      summary: Get booking by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Bookings]
+      summary: Update an existing booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingUpdate'
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Bookings]
+      summary: Cancel a booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /bookings/{id}/sign-in:
+    post:
+      tags: [Bookings]
+      summary: Sign the rider in (mark as On Going)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Rider signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /bookings/{id}/no-show:
+    post:
+      tags: [Bookings]
+      summary: Mark rider as No Show
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Booking marked as No Show
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  # ─────────────────────────────────────────────
+  # DRIVERS
+  # ─────────────────────────────────────────────
+  /drivers:
+    get:
+      tags: [Drivers]
+      summary: List all drivers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: online
+          in: query
+          schema:
+            type: boolean
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: List of drivers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Driver'
+
+    post:
+      tags: [Drivers]
+      summary: Add a new driver
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverCreate'
+      responses:
+        "201":
+          description: Driver created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  /drivers/{id}:
+    get:
+      tags: [Drivers]
+      summary: Get driver by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: Driver details
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Drivers]
+      summary: Update driver details
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverUpdate'
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  /drivers/{id}/deactivate:
+    post:
+      tags: [Drivers]
+      summary: Deactivate a driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Driver deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  # ─────────────────────────────────────────────
+  # SCHEDULE EVENTS
+  # ─────────────────────────────────────────────
+  /drivers/{id}/schedule:
+    get:
+      tags: [Schedule]
+      summary: Get driver schedule events for a date
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2026-09-22"
+      responses:
+        "200":
+          description: List of schedule events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleEvent'
+
+    post:
+      tags: [Schedule]
+      summary: Add a schedule event (duty, break, etc.)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleEventCreate'
+      responses:
+        "201":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleEvent'
+
+  /drivers/{id}/schedule/{eventId}:
+    put:
+      tags: [Schedule]
+      summary: Update a schedule event
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleEventUpdate'
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleEvent'
+
+    delete:
+      tags: [Schedule]
+      summary: Remove a schedule event
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Event deleted
+
+  /drivers/{id}/start-duty:
+    post:
+      tags: [Schedule]
+      summary: Start duty for a driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, startMinutes]
+              properties:
+                date:
+                  type: string
+                  format: date
+                startMinutes:
+                  type: integer
+                  description: Minutes since midnight
+                  example: 480
+                endMinutes:
+                  type: integer
+                  example: 1020
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Duty started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  /drivers/{id}/end-duty:
+    post:
+      tags: [Schedule]
+      summary: End duty for a driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, endMinutes]
+              properties:
+                date:
+                  type: string
+                  format: date
+                endMinutes:
+                  type: integer
+                  example: 1020
+      responses:
+        "200":
+          description: Duty ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  # ─────────────────────────────────────────────
+  # VEHICLES
+  # ─────────────────────────────────────────────
+  /vehicles:
+    get:
+      tags: [Vehicles]
+      summary: List all vehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/VehicleStatus'
+        - name: available
+          in: query
+          description: Only return vehicles available for booking
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Vehicle list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+
+    post:
+      tags: [Vehicles]
+      summary: Add a new vehicle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCreate'
+      responses:
+        "201":
+          description: Vehicle added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+  /vehicles/{id}:
+    get:
+      tags: [Vehicles]
+      summary: Get vehicle by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Vehicle details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+    patch:
+      tags: [Vehicles]
+      summary: Update vehicle details
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleUpdate'
+      responses:
+        "200":
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+    delete:
+      tags: [Vehicles]
+      summary: Remove a vehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "204":
+          description: Vehicle removed
+
+  # ─────────────────────────────────────────────
+  # ROUTES
+  # ─────────────────────────────────────────────
+  /routes:
+    get:
+      tags: [Routes]
+      summary: List all shuttle routes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Route list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShuttleRoute'
+
+    post:
+      tags: [Routes]
+      summary: Create a new route
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteCreate'
+      responses:
+        "201":
+          description: Route created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShuttleRoute'
+
+  /routes/{id}:
+    get:
+      tags: [Routes]
+      summary: Get route by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "200":
+          description: Route details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShuttleRoute'
+
+    put:
+      tags: [Routes]
+      summary: Update a route
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteCreate'
+      responses:
+        "200":
+          description: Updated route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShuttleRoute'
+
+    delete:
+      tags: [Routes]
+      summary: Delete a route
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        "204":
+          description: Route deleted
+
+  # ─────────────────────────────────────────────
+  # TRIPS
+  # ─────────────────────────────────────────────
+  /trips:
+    get:
+      tags: [Trips]
+      summary: List trip history with filters
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: driverId
+          in: query
+          schema:
+            type: string
+        - name: routeId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TripStatus'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated trip list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Trip'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+
+  # ─────────────────────────────────────────────
+  # DASHBOARD
+  # ─────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      tags: [Dashboard]
+      summary: Get live operational statistics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+
+  /dashboard/demand:
+    get:
+      tags: [Dashboard]
+      summary: Get hourly demand chart data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Hourly demand array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    hour:
+                      type: integer
+                      example: 8
+                    count:
+                      type: integer
+                      example: 12
+                    isPeak:
+                      type: boolean
+
+# ─────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Resource unique identifier
+
+  responses:
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Request body validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+
+  schemas:
+
+    # ── Enums ──
+    BookingStatus:
+      type: string
+      enum:
+        - Requested
+        - Accepted
+        - Waiting
+        - On Going
+        - Completed
+        - No Show
+        - Declined
+        - Cancelled
+        - Dropped
+      example: Accepted
+
+    DriverDutyStatus:
+      type: string
+      enum: [on-duty, off-duty, on-break]
+      example: on-duty
+
+    ScheduleEventType:
+      type: string
+      enum: [duty, break, pickup, drop, vehicle-change, empty-leg]
+
+    VehicleStatus:
+      type: string
+      enum: [Available, In Use, Maintenance, Inactive]
+      example: Available
+
+    TripStatus:
+      type: string
+      enum: [Completed, Cancelled, No Show]
+      example: Completed
+
+    # ── Core models ──
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123123"
+        employeeName:
+          type: string
+          example: Thompson
+        employeeId:
+          type: string
+          example: EMP-1000
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        fromLocation:
+          type: string
+          example: Library
+        toLocation:
+          type: string
+          example: Data Centre
+        vehicleId:
+          type: string
+          nullable: true
+          example: VEH-001
+        driverId:
+          type: string
+          nullable: true
+          example: DRV-001
+        requestedPickupTime:
+          type: string
+          pattern: '^[0-2][0-9]:[0-5][0-9]$'
+          example: "11:00"
+        actualPickupTime:
+          type: string
+          nullable: true
+          example: "11:07"
+        plannedDropTime:
+          type: string
+          nullable: true
+          example: "11:20"
+        actualDropTime:
+          type: string
+          nullable: true
+          example: "11:25"
+        date:
+          type: string
+          format: date
+          example: "2026-09-22"
+        notes:
+          type: string
+          example: ""
+        routeId:
+          type: string
+          nullable: true
+          example: RT-001
+        createdAt:
+          type: string
+          format: date-time
+
+    BookingCreate:
+      type: object
+      required: [employeeName, employeeId, fromLocation, toLocation, date, requestedPickupTime]
+      properties:
+        employeeName:
+          type: string
+        employeeId:
+          type: string
+        fromLocation:
+          type: string
+        toLocation:
+          type: string
+        date:
+          type: string
+          format: date
+        requestedPickupTime:
+          type: string
+        vehicleId:
+          type: string
+          nullable: true
+        driverId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+
+    BookingUpdate:
+      allOf:
+        - $ref: '#/components/schemas/BookingCreate'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/BookingStatus'
+            actualPickupTime:
+              type: string
+              nullable: true
+            plannedDropTime:
+              type: string
+              nullable: true
+            actualDropTime:
+              type: string
+              nullable: true
+
+    BookingListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+        total:
+          type: integer
+          example: 50
+        page:
+          type: integer
+          example: 0
+        pageSize:
+          type: integer
+          example: 10
+
+    Driver:
+      type: object
+      properties:
+        id:
+          type: string
+          example: DRV-001
+        name:
+          type: string
+          example: Samuel Jones
+        phone:
+          type: string
+          example: "+1-323-400-3200"
+        email:
+          type: string
+          format: email
+          example: samuel.jones@campus.edu
+        photoInitials:
+          type: string
+          example: SJ
+        online:
+          type: boolean
+          example: true
+        dutyStatus:
+          $ref: '#/components/schemas/DriverDutyStatus'
+        currentVehicleId:
+          type: string
+          nullable: true
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          example: 4.5
+        licenseNumber:
+          type: string
+          example: LIC-9001
+        active:
+          type: boolean
+          example: true
+        joinedDate:
+          type: string
+          format: date
+          example: "2022-01-10"
+
+    DriverCreate:
+      type: object
+      required: [name, phone, email, licenseNumber]
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        licenseNumber:
+          type: string
+
+    DriverUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        licenseNumber:
+          type: string
+        online:
+          type: boolean
+
+    ScheduleEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          example: EVT-001
+        driverId:
+          type: string
+          example: DRV-001
+        date:
+          type: string
+          format: date
+          example: "2026-09-22"
+        type:
+          $ref: '#/components/schemas/ScheduleEventType'
+        startMinutes:
+          type: integer
+          description: Minutes since midnight (e.g. 480 = 08:00)
+          example: 480
+        endMinutes:
+          type: integer
+          example: 540
+        label:
+          type: string
+          example: Duty Start
+        bookingId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    ScheduleEventCreate:
+      type: object
+      required: [date, type, startMinutes, endMinutes]
+      properties:
+        date:
+          type: string
+          format: date
+        type:
+          $ref: '#/components/schemas/ScheduleEventType'
+        startMinutes:
+          type: integer
+        endMinutes:
+          type: integer
+        label:
+          type: string
+        bookingId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+
+    ScheduleEventUpdate:
+      $ref: '#/components/schemas/ScheduleEventCreate'
+
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: string
+          example: VEH-001
+        vehicleNumber:
+          type: string
+          example: NB-001-RF
+        registrationNumber:
+          type: string
+          example: UA3200
+        vehicleType:
+          type: string
+          example: White Bus
+        capacity:
+          type: integer
+          example: 12
+        status:
+          $ref: '#/components/schemas/VehicleStatus'
+        assignedDriverId:
+          type: string
+          nullable: true
+
+    VehicleCreate:
+      type: object
+      required: [vehicleNumber, registrationNumber, vehicleType, capacity]
+      properties:
+        vehicleNumber:
+          type: string
+        registrationNumber:
+          type: string
+        vehicleType:
+          type: string
+        capacity:
+          type: integer
+        status:
+          $ref: '#/components/schemas/VehicleStatus'
+        assignedDriverId:
+          type: string
+          nullable: true
+
+    VehicleUpdate:
+      $ref: '#/components/schemas/VehicleCreate'
+
+    ShuttleRoute:
+      type: object
+      properties:
+        id:
+          type: string
+          example: RT-001
+        name:
+          type: string
+          example: Campus Route A
+        description:
+          type: string
+        pickupPoint:
+          type: string
+          example: Library
+        stops:
+          type: array
+          items:
+            type: string
+          example: [Parking]
+        dropoffPoint:
+          type: string
+          example: Data Centre
+        estimatedDurationMinutes:
+          type: integer
+          example: 18
+        active:
+          type: boolean
+          example: true
+
+    RouteCreate:
+      type: object
+      required: [name, pickupPoint, dropoffPoint, estimatedDurationMinutes]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        pickupPoint:
+          type: string
+        stops:
+          type: array
+          items:
+            type: string
+        dropoffPoint:
+          type: string
+        estimatedDurationMinutes:
+          type: integer
+        active:
+          type: boolean
+
+    Trip:
+      type: object
+      properties:
+        id:
+          type: string
+          example: TRP-0001
+        date:
+          type: string
+          format: date
+        employeeName:
+          type: string
+        routeId:
+          type: string
+          nullable: true
+        routeName:
+          type: string
+        driverId:
+          type: string
+          nullable: true
+        driverName:
+          type: string
+        vehicleId:
+          type: string
+          nullable: true
+        vehicleNumber:
+          type: string
+        pickupTime:
+          type: string
+          example: "08:00"
+        dropTime:
+          type: string
+          example: "08:18"
+        status:
+          $ref: '#/components/schemas/TripStatus'
+
+    DashboardStats:
+      type: object
+      properties:
+        todaysTrips:
+          type: integer
+        completedTrips:
+          type: integer
+        activeTrips:
+          type: integer
+        availableDrivers:
+          type: integer
+        totalBookings:
+          type: integer
+        noShows:
+          type: integer
+        peakHour:
+          type: string
+          example: "08:00"
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Admin User
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, dispatcher, driver, employee]
+          example: admin
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Resource not found
+        statusCode:
+          type: integer
+          example: 404
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Validation failed
+        statusCode:
+          type: integer
+          example: 422
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
