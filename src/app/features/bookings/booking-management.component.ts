@@ -29,7 +29,6 @@ const STATUS_OPTIONS: BookingStatus[] = [
     SearchBarComponent,
     StatusBadgeComponent,
     EmptyStateComponent,
-    MatSidenavModule,
     MatIconModule,
     MatButtonModule,
     MatSelectModule,
@@ -45,135 +44,216 @@ const STATUS_OPTIONS: BookingStatus[] = [
       </div>
     </app-page-header>
 
-    <mat-sidenav-container class="booking-shell">
-      <mat-sidenav-content>
-        <div class="card">
-          <div class="toolbar">
-            <app-search-bar placeholder="Search Booking ID or Employee" (search)="bookingService.onSearchInput($event)"></app-search-bar>
+    <!-- Page shell: table + overlay drawer side by side -->
+    <div class="page-shell">
+      <div class="card table-card">
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <app-search-bar
+            placeholder="Search Booking ID or Employee"
+            (search)="bookingService.onSearchInput($event)"
+            style="flex:1; max-width: 400px;"
+          ></app-search-bar>
 
-            <div class="filters">
-              <select class="select" [value]="bookingService.statusFilter()" (change)="onStatusChange($event)" aria-label="Filter by status">
-                <option value="All">All statuses</option>
-                @for (s of statusOptions; track s) { <option [value]="s">{{ s }}</option> }
-              </select>
+          <div class="filters">
+            <select class="filter-select" [value]="bookingService.statusFilter()" (change)="onStatusChange($event)" aria-label="Filter by status">
+              <option value="All">All statuses</option>
+              @for (s of statusOptions; track s) { <option [value]="s">{{ s }}</option> }
+            </select>
 
-              <input
-                type="date"
-                class="select"
-                [value]="dateFilterValue()"
-                (change)="onDateChange($event)"
-                aria-label="Filter by date"
-              />
+            <input
+              type="date"
+              class="filter-select"
+              [value]="dateFilterValue()"
+              (change)="onDateChange($event)"
+              aria-label="Filter by date"
+            />
 
-              <select class="select" [value]="bookingService.routeFilter()" (change)="onRouteChange($event)" aria-label="Filter by route">
-                <option value="All">All routes</option>
-                @for (r of routeService.routes(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
-              </select>
+            <select class="filter-select" [value]="bookingService.routeFilter()" (change)="onRouteChange($event)" aria-label="Filter by route">
+              <option value="All">All routes</option>
+              @for (r of routeService.routes(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
+            </select>
 
-              <select class="select" [value]="bookingService.driverFilter()" (change)="onDriverChange($event)" aria-label="Filter by driver">
-                <option value="All">All drivers</option>
-                @for (d of driverService.activeDrivers(); track d.id) { <option [value]="d.id">{{ d.name }}</option> }
-              </select>
-            </div>
+            <select class="filter-select" [value]="bookingService.driverFilter()" (change)="onDriverChange($event)" aria-label="Filter by driver">
+              <option value="All">All drivers</option>
+              @for (d of driverService.activeDrivers(); track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+            </select>
+          </div>
+        </div>
+
+        @if (bookingService.pagedBookings().length === 0) {
+          <app-empty-state icon="event_busy" title="No bookings found" description="Try adjusting your search or filters."></app-empty-state>
+        } @else {
+          <div class="scroll-x">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>BOOKING ID</th>
+                  <th>EMPLOYEE</th>
+                  <th>STATUS</th>
+                  <th>FROM</th>
+                  <th>TO</th>
+                  <th>VEHICLE</th>
+                  <th>REQUESTED PICKUP</th>
+                  <th>PICKUP TIME</th>
+                  <th>PLANNED DROP</th>
+                  <th>ACTUAL DROP</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of bookingService.pagedBookings(); track b.id) {
+                  <tr [class.row-selected]="selectedBooking()?.id === b.id" (click)="viewBooking(b)" style="cursor:pointer">
+                    <td class="id-cell">{{ b.id }}</td>
+                    <td>{{ b.employeeName }}</td>
+                    <td><app-status-badge [status]="b.status"></app-status-badge></td>
+                    <td>{{ b.fromLocation }}</td>
+                    <td>{{ b.toLocation }}</td>
+                    <td>{{ vehicleNumber(b.vehicleId) }}</td>
+                    <td>{{ b.requestedPickupTime }}</td>
+                    <td>{{ b.actualPickupTime ?? '-' }}</td>
+                    <td>{{ b.plannedDropTime ?? '-' }}</td>
+                    <td>{{ b.actualDropTime ?? '-' }}</td>
+                    <td>
+                      <button class="btn btn-sm" type="button" (click)="$event.stopPropagation(); viewBooking(b)">View</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
 
-          @if (bookingService.pagedBookings().length === 0) {
-            <app-empty-state icon="event_busy" title="No bookings found" description="Try adjusting your search or filters."></app-empty-state>
-          } @else {
-            <div class="scroll-x">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Booking ID</th>
-                    <th>Employee</th>
-                    <th>Status</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Vehicle</th>
-                    <th>Requested Pickup</th>
-                    <th>Pickup Time</th>
-                    <th>Planned Drop</th>
-                    <th>Actual Drop</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (b of bookingService.pagedBookings(); track b.id) {
-                    <tr>
-                      <td>{{ b.id }}</td>
-                      <td>{{ b.employeeName }}</td>
-                      <td><app-status-badge [status]="b.status"></app-status-badge></td>
-                      <td>{{ b.fromLocation }}</td>
-                      <td>{{ b.toLocation }}</td>
-                      <td>{{ vehicleNumber(b.vehicleId) }}</td>
-                      <td>{{ b.requestedPickupTime }}</td>
-                      <td>{{ b.actualPickupTime ?? '-' }}</td>
-                      <td>{{ b.plannedDropTime ?? '-' }}</td>
-                      <td>{{ b.actualDropTime ?? '-' }}</td>
-                      <td>
-                        <button class="btn" type="button" (click)="viewBooking(b)">View</button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+          <div class="pagination">
+            <span class="text-muted pag-info">
+              Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ bookingService.totalCount() }} items
+            </span>
+            <div class="page-buttons">
+              <button class="btn" type="button" [disabled]="bookingService.pageIndex() === 0" (click)="goToPage(bookingService.pageIndex() - 1)">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              @for (p of pageNumbers(); track p) {
+                <button
+                  class="btn page-num"
+                  [class.btn-primary]="p - 1 === bookingService.pageIndex()"
+                  type="button"
+                  (click)="goToPage(p - 1)"
+                >{{ p }}</button>
+              }
+              <button class="btn" type="button" [disabled]="bookingService.pageIndex() >= totalPages() - 1" (click)="goToPage(bookingService.pageIndex() + 1)">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
             </div>
+          </div>
+        }
+      </div>
 
-            <div class="pagination">
-              <span class="text-muted">
-                Showing {{ rangeStart() }}-{{ rangeEnd() }} of {{ bookingService.totalCount() }} items
-              </span>
-              <div class="page-buttons">
-                <button class="btn" type="button" [disabled]="bookingService.pageIndex() === 0" (click)="goToPage(bookingService.pageIndex() - 1)">
-                  <mat-icon>chevron_left</mat-icon>
-                </button>
-                @for (p of pageNumbers(); track p) {
-                  <button class="btn page-num" [class.btn-primary]="p - 1 === bookingService.pageIndex()" type="button" (click)="goToPage(p - 1)">
-                    {{ p }}
-                  </button>
-                }
-                <button class="btn" type="button" [disabled]="bookingService.pageIndex() >= totalPages() - 1" (click)="goToPage(bookingService.pageIndex() + 1)">
-                  <mat-icon>chevron_right</mat-icon>
-                </button>
-              </div>
-            </div>
-          }
+      <!-- Overlay drawer — does NOT shrink the table -->
+      @if (selectedBooking()) {
+        <div class="drawer-overlay" role="dialog" aria-label="Booking details">
+          <app-booking-details-drawer
+            [booking]="selectedBooking()"
+            (close)="selectedBooking.set(null)"
+            (edit)="openEdit($event)"
+            (signInRider)="onSignIn($event)"
+            (markNoShow)="onMarkNoShow($event)"
+            (cancelBooking)="onCancel($event)"
+          ></app-booking-details-drawer>
         </div>
-      </mat-sidenav-content>
-
-      <mat-sidenav #drawer mode="over" position="end" class="booking-drawer" [opened]="!!selectedBooking()" (closedStart)="selectedBooking.set(null)">
-        <app-booking-details-drawer
-          [booking]="selectedBooking()"
-          (close)="selectedBooking.set(null)"
-          (edit)="openEdit($event)"
-          (signInRider)="onSignIn($event)"
-          (markNoShow)="onMarkNoShow($event)"
-          (cancelBooking)="onCancel($event)"
-        ></app-booking-details-drawer>
-      </mat-sidenav>
-    </mat-sidenav-container>
+      }
+    </div>
   `,
   styles: [
     `
-      .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px; flex-wrap: wrap; }
-      .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-      .select {
+      .page-shell {
+        position: relative;
+        display: flex;
+        gap: 0;
+        align-items: flex-start;
+      }
+
+      .table-card {
+        flex: 1;
+        min-width: 0;
+        transition: margin-right 0.2s ease;
+      }
+
+      /* Overlay drawer — fixed width, sits to the right, slides in */
+      .drawer-overlay {
+        width: 400px;
+        min-width: 400px;
+        max-width: 400px;
+        flex-shrink: 0;
+        height: calc(100vh - 60px - 48px);
+        position: sticky;
+        top: 0;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        margin-left: 16px;
+        animation: slideIn 0.18s ease;
+      }
+
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateX(12px); }
+        to   { opacity: 1; transform: translateX(0); }
+      }
+
+      @media (max-width: 1100px) {
+        .drawer-overlay {
+          position: fixed;
+          top: 60px;
+          right: 16px;
+          bottom: 16px;
+          height: auto;
+          margin-left: 0;
+          z-index: 50;
+        }
+      }
+      @media (max-width: 640px) {
+        .drawer-overlay { width: calc(100vw - 32px); min-width: 0; max-width: none; right: 16px; }
+      }
+
+      /* Toolbar */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .filter-select {
         border: 1px solid var(--color-border-strong);
         border-radius: var(--radius-md);
         padding: 7px 10px;
         font-size: 12.5px;
         background: var(--color-surface);
         color: var(--color-text);
+        height: 34px;
       }
-      .pagination { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+      .filter-select:focus { outline: 2px solid var(--color-primary); }
+
+      /* Table tweaks */
+      .id-cell { font-weight: 600; color: var(--color-primary); }
+      .row-selected td { background: var(--color-primary-light) !important; }
+      .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+      /* Pagination */
+      .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+        border-top: 1px solid var(--color-border);
+      }
+      .pag-info { font-size: 12.5px; }
       .page-buttons { display: flex; gap: 4px; }
       .page-num { min-width: 34px; justify-content: center; padding: 6px 0; }
-
-      .booking-shell { background: transparent; }
-      ::ng-deep .booking-drawer { width: 400px; border-left: 1px solid var(--color-border); }
-      @media (max-width: 640px) {
-        ::ng-deep .booking-drawer { width: 100%; }
-      }
     `,
   ],
 })

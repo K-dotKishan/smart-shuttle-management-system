@@ -10,6 +10,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
+  { label: 'Operations', icon: 'manage_accounts', path: '/operations' },
   { label: 'Drivers', icon: 'badge', path: '/drivers' },
   { label: 'Bookings', icon: 'event_seat', path: '/bookings' },
   { label: 'Routes', icon: 'alt_route', path: '/routes' },

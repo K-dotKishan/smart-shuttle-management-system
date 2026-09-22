@@ -14,6 +14,14 @@ export const routes: Routes = [
         title: 'Dashboard · Campus Shuttle',
       },
       {
+        path: 'operations',
+        loadComponent: () =>
+          import('./features/operations/operations.component').then(
+            (m) => m.OperationsComponent
+          ),
+        title: 'Operations · Campus Shuttle',
+      },
+      {
         path: 'drivers',
         loadComponent: () =>
           import('./features/drivers/driver-management.component').then(
