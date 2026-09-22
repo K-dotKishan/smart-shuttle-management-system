@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SearchBarComponent } from '../../shared/components/search-bar/search-bar.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
@@ -32,10 +33,11 @@ const STATUS_OPTIONS: BookingStatus[] = [
     MatIconModule,
     MatButtonModule,
     MatSelectModule,
+    MatMenuModule,
     BookingDetailsDrawerComponent,
   ],
   template: `
-    <app-page-header title="Journeys" subtitle="View and manage every employee shuttle journey">
+    <app-page-header title="Employee Journeys" subtitle="View and manage every employee shuttle journey">
       <div actions>
         <button class="btn btn-primary" type="button" (click)="openCreate()">
           <mat-icon>add</mat-icon>
@@ -94,11 +96,11 @@ const STATUS_OPTIONS: BookingStatus[] = [
                   <th>FROM</th>
                   <th>TO</th>
                   <th>VEHICLE</th>
-                  <th>REQUESTED PICKUP</th>
-                  <th>PICKUP TIME</th>
+                  <th>REQ. PICKUP</th>
+                  <th>PICKUP</th>
                   <th>PLANNED DROP</th>
                   <th>ACTUAL DROP</th>
-                  <th></th>
+                  <th style="width:40px;"></th>
                 </tr>
               </thead>
               <tbody>
@@ -114,8 +116,48 @@ const STATUS_OPTIONS: BookingStatus[] = [
                     <td>{{ b.actualPickupTime ?? '-' }}</td>
                     <td>{{ b.plannedDropTime ?? '-' }}</td>
                     <td>{{ b.actualDropTime ?? '-' }}</td>
-                    <td>
-                      <button class="btn btn-sm" type="button" (click)="$event.stopPropagation(); viewBooking(b)">View</button>
+                    <td class="action-cell" (click)="$event.stopPropagation()">
+                      <button
+                        class="row-action-btn"
+                        type="button"
+                        [matMenuTriggerFor]="rowMenu"
+                        [attr.aria-label]="'Actions for booking ' + b.id"
+                      >
+                        <mat-icon>more_vert</mat-icon>
+                      </button>
+                      <mat-menu #rowMenu="matMenu">
+                        <button mat-menu-item type="button" (click)="viewBooking(b)">
+                          <mat-icon>visibility</mat-icon><span>View Details</span>
+                        </button>
+                        <button mat-menu-item type="button" (click)="openEdit(b)">
+                          <mat-icon>edit</mat-icon><span>Edit</span>
+                        </button>
+                        <button
+                          mat-menu-item
+                          type="button"
+                          [disabled]="b.status === 'On Going' || b.status === 'Completed' || b.status === 'Cancelled'"
+                          (click)="onSignIn(b.id)"
+                        >
+                          <mat-icon>login</mat-icon><span>Sign In Rider</span>
+                        </button>
+                        <button
+                          mat-menu-item
+                          type="button"
+                          [disabled]="b.status === 'Completed' || b.status === 'Cancelled'"
+                          (click)="onMarkNoShow(b.id)"
+                        >
+                          <mat-icon>person_off</mat-icon><span>Mark No-show</span>
+                        </button>
+                        <button
+                          mat-menu-item
+                          type="button"
+                          class="menu-danger"
+                          [disabled]="b.status === 'Completed' || b.status === 'Cancelled'"
+                          (click)="onCancel(b.id)"
+                        >
+                          <mat-icon>cancel</mat-icon><span>Cancel Booking</span>
+                        </button>
+                      </mat-menu>
                     </td>
                   </tr>
                 }
@@ -166,53 +208,43 @@ const STATUS_OPTIONS: BookingStatus[] = [
     `
       .page-shell {
         position: relative;
-        display: flex;
-        gap: 0;
-        align-items: flex-start;
       }
 
       .table-card {
-        flex: 1;
-        min-width: 0;
-        transition: margin-right 0.2s ease;
+        width: 100%;
       }
 
-      /* Overlay drawer — fixed width, sits to the right, slides in */
+      /* Overlay drawer — floats over the table, never pushes it */
       .drawer-overlay {
         width: 400px;
         min-width: 400px;
         max-width: 400px;
         flex-shrink: 0;
-        height: calc(100vh - 60px - 48px);
-        position: sticky;
-        top: 0;
+        position: fixed;
+        top: 62px;
+        right: 0;
+        bottom: 0;
         background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-lg);
+        border-left: 1px solid var(--color-border);
+        box-shadow: var(--shadow-xl);
         overflow: hidden;
-        margin-left: 16px;
-        animation: slideIn 0.18s ease;
+        z-index: 100;
+        animation: slideIn 0.2s cubic-bezier(.4,0,.2,1);
       }
 
       @keyframes slideIn {
-        from { opacity: 0; transform: translateX(12px); }
+        from { opacity: 0; transform: translateX(24px); }
         to   { opacity: 1; transform: translateX(0); }
       }
 
-      @media (max-width: 1100px) {
-        .drawer-overlay {
-          position: fixed;
-          top: 60px;
-          right: 16px;
-          bottom: 16px;
-          height: auto;
-          margin-left: 0;
-          z-index: 50;
-        }
-      }
       @media (max-width: 640px) {
-        .drawer-overlay { width: calc(100vw - 32px); min-width: 0; max-width: none; right: 16px; }
+        .drawer-overlay {
+          width: 100vw;
+          min-width: 0;
+          max-width: 100vw;
+          right: 0;
+          left: 0;
+        }
       }
 
       /* Toolbar */
@@ -239,7 +271,31 @@ const STATUS_OPTIONS: BookingStatus[] = [
       /* Table tweaks */
       .id-cell { font-weight: 600; color: var(--color-primary); }
       .row-selected td { background: var(--color-primary-light) !important; }
-      .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+      /* Three-dot action cell */
+      .action-cell { padding: 0 8px !important; width: 40px; }
+      .row-action-btn {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-text-faint);
+        opacity: 0;
+        transition: opacity 0.12s, background 0.12s;
+      }
+      .row-action-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      tr:hover .row-action-btn { opacity: 1; }
+      .row-action-btn:hover { background: var(--color-bg); color: var(--color-text-muted); }
+      ::ng-deep .menu-danger { color: var(--color-danger) !important; }
+      ::ng-deep .menu-danger mat-icon { color: var(--color-danger) !important; }
+
+      /* Override global min-width for this table so it fits */
+      .table-card table.data-table { min-width: 700px; }
 
       /* Pagination */
       .pagination {
