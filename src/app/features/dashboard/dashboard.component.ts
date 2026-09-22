@@ -18,28 +18,32 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
     <app-page-header title="Dashboard" subtitle="Live overview of today's campus shuttle operations"></app-page-header>
 
     <div class="stat-grid">
-      <app-stat-card label="Today's Trips" [value]="todaysTrips()" icon="route" hint="Bookings scheduled today"></app-stat-card>
-      <app-stat-card label="Completed" [value]="completedTrips()" icon="task_alt" accent="#17824f" hint="Successfully dropped"></app-stat-card>
-      <app-stat-card label="Active Trips" [value]="activeTrips()" icon="directions_bus" accent="#a15c00" hint="On going / accepted"></app-stat-card>
-      <app-stat-card label="Available Drivers" [value]="availableDrivers()" icon="badge" accent="#17824f" hint="Online and on duty"></app-stat-card>
-      <app-stat-card label="Total Bookings" [value]="totalBookings()" icon="event_seat" hint="All statuses, today"></app-stat-card>
-      <app-stat-card label="No Shows" [value]="noShows()" icon="report" accent="#b3261e" hint="Riders who did not board"></app-stat-card>
+      <app-stat-card label="Today's Trips"      [value]="todaysTrips()"      icon="route"         hint="Bookings scheduled today"></app-stat-card>
+      <app-stat-card label="Completed"          [value]="completedTrips()"   icon="task_alt"      accent="#0f7b4f" hint="Successfully dropped"></app-stat-card>
+      <app-stat-card label="Active Trips"       [value]="activeTrips()"      icon="directions_bus" accent="#9a5200" hint="On going / accepted"></app-stat-card>
+      <app-stat-card label="Available Drivers"  [value]="availableDrivers()" icon="badge"         accent="#0f7b4f" hint="Online and on duty"></app-stat-card>
+      <app-stat-card label="Total Bookings"     [value]="totalBookings()"    icon="event_seat"    hint="All statuses, today"></app-stat-card>
+      <app-stat-card label="No Shows"           [value]="noShows()"          icon="report"        accent="#be2c22" hint="Riders who did not board"></app-stat-card>
     </div>
 
     <div class="grid-2">
       <section class="card card-pad">
-        <div class="flex justify-between items-center" style="margin-bottom: 12px;">
+        <div class="section-hd">
           <h3>Shuttle Demand by Hour</h3>
           <span class="badge badge-info">Peak: {{ peakHourLabel() }}</span>
         </div>
-        <div class="chart" role="img" aria-label="Bar chart of shuttle demand by hour, highlighting peak hours">
+        <div
+          class="chart"
+          role="img"
+          aria-label="Bar chart of shuttle demand by hour"
+        >
           @for (bar of demandBars(); track bar.hour) {
             <div class="chart-col">
               <div
                 class="chart-bar"
                 [class.peak]="bar.isPeak"
                 [style.height.%]="bar.heightPct"
-                [attr.title]="bar.hourLabel + ' — ' + bar.count + ' trips'"
+                [title]="bar.hourLabel + ' — ' + bar.count + ' trips'"
               ></div>
               <span class="chart-label">{{ bar.hourLabel }}</span>
             </div>
@@ -48,7 +52,10 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
       </section>
 
       <section class="card card-pad">
-        <h3 style="margin-bottom: 12px;">Today's Driver Availability</h3>
+        <div class="section-hd">
+          <h3>Driver Availability</h3>
+          <span class="text-muted" style="font-size:12px;">Today</span>
+        </div>
         <div class="driver-list">
           @for (driver of driverAvailability(); track driver.id) {
             <div class="driver-row">
@@ -60,16 +67,16 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
               <app-status-badge [status]="driver.online ? 'Online' : 'Offline'"></app-status-badge>
             </div>
           } @empty {
-            <app-empty-state icon="badge" title="No driver data" description="Add drivers to see availability here."></app-empty-state>
+            <app-empty-state icon="badge" title="No driver data" description="Add drivers to see availability."></app-empty-state>
           }
         </div>
       </section>
     </div>
 
-    <section class="card card-pad" style="margin-top: 16px;">
-      <div class="flex justify-between items-center" style="margin-bottom: 12px;">
+    <section class="card" style="margin-top: 16px;">
+      <div class="section-hd card-pad" style="margin-bottom:0; padding-bottom: 0;">
         <h3>Recent Bookings</h3>
-        <a routerLink="/bookings">View all bookings →</a>
+        <a class="view-link" routerLink="/bookings">View all →</a>
       </div>
       <div class="scroll-x">
         <table class="data-table">
@@ -86,7 +93,7 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
           <tbody>
             @for (b of recentBookings(); track b.id) {
               <tr>
-                <td>{{ b.id }}</td>
+                <td class="booking-id-cell">{{ b.id }}</td>
                 <td>{{ b.employeeName }}</td>
                 <td><app-status-badge [status]="b.status"></app-status-badge></td>
                 <td>{{ b.fromLocation }}</td>
@@ -94,7 +101,9 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
                 <td>{{ b.requestedPickupTime }}</td>
               </tr>
             } @empty {
-              <tr><td colspan="6"><app-empty-state icon="event_busy" title="No recent bookings"></app-empty-state></td></tr>
+              <tr><td colspan="6">
+                <app-empty-state icon="event_busy" title="No recent bookings"></app-empty-state>
+              </td></tr>
             }
           </tbody>
         </table>
@@ -105,43 +114,109 @@ const DEMAND_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
     `
       .stat-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        gap: 14px;
-        margin-bottom: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
       }
       .grid-2 {
         display: grid;
-        grid-template-columns: 1.4fr 1fr;
+        grid-template-columns: 1.5fr 1fr;
         gap: 16px;
       }
-      @media (max-width: 1000px) {
-        .grid-2 { grid-template-columns: 1fr; }
-      }
-      h3 { font-size: 14.5px; }
+      @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
 
-      .chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; padding-top: 8px; }
-      .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+      /* Section headers */
+      .section-hd {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .section-hd h3 { font-size: 14px; font-weight: 700; }
+
+      /* Chart */
+      .chart-wrap { position: relative; }
+      .chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        height: 160px;
+        padding: 8px 0 0;
+      }
+      .chart-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+        position: relative;
+      }
       .chart-bar {
         width: 100%;
-        max-width: 20px;
+        max-width: 22px;
         background: var(--color-primary-light);
-        border-radius: 3px 3px 0 0;
+        border-radius: 5px 5px 0 0;
         min-height: 4px;
-        transition: height 0.2s ease;
+        transition: height 0.25s cubic-bezier(.4,0,.2,1), background 0.25s;
       }
-      .chart-bar.peak { background: var(--color-primary); }
-      .chart-label { font-size: 10px; color: var(--color-text-faint); margin-top: 6px; writing-mode: vertical-rl; transform: rotate(180deg); }
+      .chart-bar:hover { filter: brightness(0.93); }
+      .chart-bar.peak {
+        background: linear-gradient(180deg, #5b86f5 0%, var(--color-primary) 100%);
+        box-shadow: 0 -2px 8px rgba(59,110,240,0.25);
+      }
+      .chart-label {
+        font-size: 9.5px;
+        color: var(--color-text-faint);
+        margin-top: 5px;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        user-select: none;
+      }
 
-      .driver-list { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
-      .driver-row { display: flex; align-items: center; gap: 10px; }
-      .driver-info { flex: 1; display: flex; flex-direction: column; line-height: 1.3; }
-      .driver-info strong { font-size: 13px; }
+      /* Driver availability */
+      .driver-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 230px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+      }
+      .driver-row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 8px 10px;
+        border-radius: var(--radius-md);
+        transition: background var(--transition-fast);
+      }
+      .driver-row:hover { background: var(--color-bg); }
+      .driver-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+      .driver-info strong { font-size: 13px; font-weight: 600; }
       .driver-info .text-muted { font-size: 11.5px; }
       .avatar {
-        width: 30px; height: 30px; border-radius: 50%;
-        background: var(--color-primary-light); color: var(--color-primary-dark);
-        display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--color-primary-light) 0%, #d0dcfd 100%);
+        color: var(--color-primary-dark);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; flex-shrink: 0;
+        border: 1.5px solid rgba(59,110,240,0.15);
       }
+
+      /* Recent bookings section */
+      .booking-id-cell { font-weight: 600; color: var(--color-primary); font-size: 12.5px; }
+      .view-link {
+        font-size: 12.5px;
+        color: var(--color-primary);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        opacity: 0.85;
+      }
+      .view-link:hover { opacity: 1; text-decoration: none; }
     `,
   ],
 })
